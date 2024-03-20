@@ -1,0 +1,17 @@
+exposure_time: 15000
+trigger:
+  source: 'XI_TRG_EDGE_RISING' # if not hardware >> "XI_TRG_SOFTWARE"
+  selector: 'XI_TRG_SEL_FRAME_START'
+gpi:
+  selector: 'XI_GPI_PORT1'
+  mode: 'XI_GPI_TRIGGER'
+gpo:
+  selector: 'XI_GPO_PORT1'
+  mode: 'XI_GPO_BUSY_NEG' # XI_GPO_EXPOSURE_ACTIVE_NEG
+auto_exposure: 0
+ag_max_limit: 10
+ae_max_limit: 10000
+exp_priority: 0.5
+aeag_level: 50
+LUTEnable: 0
+exposure_burst_count: 1
