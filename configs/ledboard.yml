@@ -3,10 +3,9 @@ baudrate: 115200
 bytesize: serial.EIGHTBITS
 parity: serial.PARITY_NONE
 stopbits: serial.STOPBITS_ONE
-timeout: 0
-animation_number: 1,
-animation_speed: 14,
-intensity: 99,
-trigger_delay: 10,
-led_delay: 5,
-timeout:float: 0.05
+animation_number: 1
+animation_speed: 14
+intensity: 99
+trigger_delay: 10
+led_delay: 5
+timeout: 0.05

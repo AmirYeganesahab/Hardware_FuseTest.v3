@@ -16,34 +16,36 @@ import yaml
 
 logging.info('__ ledboard module called __')
 
-
-
 # Path: led/module_.py
 class ledboard:
     def __init__(self) -> None:
         self.settings()
+        self.illumCmd()
+        self.flushCmd()
+        self.trgCmd()
+        self.setDelayCmd()
         self.open_device()
 
     def settings(self):
-        necessary_conf = ['port', 'baudrate', 'bytesize', 'parity', 'stopbits', 'timeout']
+        necessary_conf = ['port', 'baudrate', 'bytesize', 'parity', 'stopbits', 'timeout', 'animation_number', 'animation_speed', 'intensity', 'trigger_delay', 'led_delay','timeout']
 
-        with open('configs/ledboard.yml', 'r') as file:
+        with open('../configs/ledboard.yml', 'r') as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
-            print(config)
             self.config = config
-            confok = [key in necessary_conf for key in self.config.keys()]
+            confok = [key in necessary_conf for key in config.keys()]
             if not all(confok):
-                raise Exception(f'Missing configuration in ledboard.yml, all below should be present: \n {necessary_conf}')
+                raise Exception(f'Missing configuration in ledboard.yml, all below should be present: \n {necessary_conf}\n {confok}')
+            return True
 
     def open_device(self):
         # Configure the serial port settings
-        ser = serial.Serial(
+        self.ser = serial.Serial(
             port = self.config['port'],   # Replace 'COM1' with the actual serial port name
             baudrate = self.config['baudrate'],
-            bytesize = self.config['bytesize'],
-            parity = self.config['parity'],
-            stopbits = self.config['stopbits'],
-            timeout = self.config['timeout'] 
+            bytesize = eval(self.config['bytesize']),
+            parity = eval(self.config['parity']),
+            stopbits = eval(self.config['stopbits']),
+            timeout = self.config['timeout']
         )
 
     def calculate_checksum(self,data_bytes):
@@ -71,9 +73,9 @@ class ledboard:
                              0x01,
                              0x00,
                              0x00,
-                             int(hex(self.intensity), 16),
-                             int(hex(self.animation_speed),16),
-                             int(hex(self.animation_number),16)]
+                             int(hex(self.config['intensity']), 16),
+                             int(hex(self.config['animation_speed']),16),
+                             int(hex(self.config['animation_number']),16)]
         
         command.append(self.calculate_checksum(command))
         self.illumination_command = bytes(command)
@@ -98,8 +100,8 @@ class ledboard:
                             0x00,
                             0x00,
                             int(hex(trigger_state),16),
-                            int(hex(self.animation_speed),16),
-                            int(hex(self.animation_number),16)]
+                            int(hex(self.config['animation_speed']),16),
+                            int(hex(self.config['animation_number']),16)]
         
         all_off.append(self.calculate_checksum(all_off))
         self.flush_command = bytes(all_off)
@@ -110,8 +112,8 @@ class ledboard:
                             0x02,
                             0x00,
                             0x01,
-                            int(hex(self.intensity), 16),
-                            int(hex(self.animation_speed),16),
+                            int(hex(self.config['intensity']), 16),
+                            int(hex(self.config['animation_speed']),16),
                             int(hex(0),16)]
         
         command.append(self.calculate_checksum(command))
@@ -121,8 +123,8 @@ class ledboard:
         command:List[int] = [0xaa,
                              0x03,
                              0x00,
-                             int(hex(self.trigger_delay),16),
-                             int(hex(self.led_delay),16),
+                             int(hex(self.config['trigger_delay']),16),
+                             int(hex(self.config['led_delay']),16),
                              0x00,
                              0x00]
 
@@ -142,17 +144,17 @@ class ledboard:
         command = [0xaa,
                    0x06,
                    0x00,
-                   int(hex(self.trigger_delay),16),
-                   int(hex(self.led_delay),16),
-                   int(hex(self.intensity),16),
+                   int(hex(self.config['trigger_delay']),16),
+                   int(hex(self.config['led_delay']),16),
+                   int(hex(self.config['intensity']),16),
                    int(hex(led_number),16)]
         command.append(self.calculate_checksum(command))
-        self.singleTrigger = bytes(command)
+        return bytes(command)
 
     def illuminate(self) -> None:
         # turns three central leds on. trigger is sent one on every call.
-        self.ser.write(self.illumination_command)
-        return self.ser.read(8) 
+        out = self.ser.write(self.illumination_command)
+        return self.ser.read(8), out
 
     def flush(self, trigger_state:int=1)->None:
         # turns all lwds off. 
@@ -167,19 +169,48 @@ class ledboard:
         # print('------2')
     
     def trigger(self)->None:
-        self.ser.write(self.trigger_command)
+        out = self.ser.write(self.trigger_command)
+        print(out)
+        return self.ser.read(8), out
 
     def set_daleys(self)->None:
         time.sleep(0.05)
-        self.ser.write(self.set_daley_command)
+        out = self.ser.write(self.set_daley_command)
         time.sleep(0.05)
-
+        return out
+        
     def single_trigger(self,led_number)->None:
         # print(command_bytes)
-        cmd = self.set_daley_command(led_number)
+        cmd = self.singleTriggerCmd(led_number=led_number)
         self.ser.write(cmd)
         time.sleep(0.1)
+        out = self.ser.read(8)
+        return out
 
-if __name__=='__main':
+if __name__=='__main__':
     led = ledboard()
-    led.flush()
+
+    out = led.flush()
+    print(out)
+
+    out = led.trigger()
+    print(out)
+
+    out = led.illuminate()
+    print(out)
+
+    out = led.set_daleys()
+    print(out)
+    mylist = [None]*55
+    for l in range(1,56):
+        out = led.single_trigger(led_number=l)
+        mylist[l-1]=out
+    print(mylist)
+    
+
+
+
+
+
+
+
