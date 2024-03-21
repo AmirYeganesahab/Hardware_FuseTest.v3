@@ -16,13 +16,13 @@ import yaml
 
 logging.info('__ ledboard module called __')
 
-class comands:
-    ...
+
 
 # Path: led/module_.py
 class ledboard:
     def __init__(self) -> None:
         self.settings()
+        self.open_device()
 
     def settings(self):
         necessary_conf = ['port', 'baudrate', 'bytesize', 'parity', 'stopbits', 'timeout']
@@ -180,4 +180,6 @@ class ledboard:
         self.ser.write(cmd)
         time.sleep(0.1)
 
-if __name__=='__main'
+if __name__=='__main':
+    led = ledboard()
+    led.flush()
