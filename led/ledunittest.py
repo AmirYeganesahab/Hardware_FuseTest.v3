@@ -1,11 +1,6 @@
 from unittest.mock import patch
 import unittest
-try:
-    from module_ import ledboard
-except:
-    import module_
-    ledboard = module_.ledboard
-
+from module_ import ledboard
 import serial
 
 class TestYourClass(unittest.TestCase):
