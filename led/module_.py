@@ -38,15 +38,19 @@ class ledboard:
             return True
 
     def open_device(self):
-        # Configure the serial port settings
-        self.ser = serial.Serial(
-            port = self.config['port'],   # Replace 'COM1' with the actual serial port name
-            baudrate = self.config['baudrate'],
-            bytesize = eval(self.config['bytesize']),
-            parity = eval(self.config['parity']),
-            stopbits = eval(self.config['stopbits']),
-            timeout = self.config['timeout']
-        )
+        try:
+            # Configure the serial port settings
+            self.ser = serial.Serial(
+                port = self.config['port'],   # Replace 'COM1' with the actual serial port name
+                baudrate = self.config['baudrate'],
+                bytesize = eval(self.config['bytesize']),
+                parity = eval(self.config['parity']),
+                stopbits = eval(self.config['stopbits']),
+                timeout = self.config['timeout']
+            )
+            return True
+        except Exception as e:
+            raise ConnectionError(e)
 
     def calculate_checksum(self,data_bytes):
         # Calculate the XOR checksum of the data bytes
@@ -79,6 +83,7 @@ class ledboard:
         
         command.append(self.calculate_checksum(command))
         self.illumination_command = bytes(command)
+        return True
 
     def flushCmd(self,trigger_state:int=1)->None:
         """
@@ -102,9 +107,10 @@ class ledboard:
                             int(hex(trigger_state),16),
                             int(hex(self.config['animation_speed']),16),
                             int(hex(self.config['animation_number']),16)]
-        
+
         all_off.append(self.calculate_checksum(all_off))
         self.flush_command = bytes(all_off)
+        return True
 
     def trgCmd(self)->None:
 
@@ -118,6 +124,7 @@ class ledboard:
         
         command.append(self.calculate_checksum(command))
         self.trigger_command:bytes = bytes(command)
+        return True
     
     def setDelayCmd(self)->None:
         command:List[int] = [0xaa,
@@ -127,9 +134,10 @@ class ledboard:
                              int(hex(self.config['led_delay']),16),
                              0x00,
                              0x00]
-
+        
         command.append(self.calculate_checksum(command))
         self.set_daley_command = bytes(command)
+        return True
 
     def singleTriggerCmd(self,led_number)->None:
         # 0xAA	0x06	0x00	TrigDelay	LedDelay	Parlaklık	IR Led No	Byte1 xor Byte1 xor … xor Byte7
@@ -148,6 +156,7 @@ class ledboard:
                    int(hex(self.config['led_delay']),16),
                    int(hex(self.config['intensity']),16),
                    int(hex(led_number),16)]
+        
         command.append(self.calculate_checksum(command))
         return bytes(command)
 
@@ -157,16 +166,11 @@ class ledboard:
         return self.ser.read(8), out
 
     def flush(self, trigger_state:int=1)->None:
-        # turns all lwds off. 
-        # if trigger_state==1 card sends a trigger to camera while turning all leds off, 
-        # else it turns all leds off without sending a trigger to camera
-        # print('------0')
+        
         if trigger_state!=self.trigger_state:
             self.flushCmd(trigger_state)
-        # print('------1')
         self.ser.write(self.flush_command)
-        return self.ser.read(8) 
-        # print('------2')
+        return True 
     
     def trigger(self)->None:
         out = self.ser.write(self.trigger_command)
@@ -189,28 +193,28 @@ class ledboard:
 
 if __name__=='__main__':
     led = ledboard()
-
+    time.sleep(1)
     out = led.flush()
     print(out)
-
+    print('led board all of')
+    time.sleep(1)
     out = led.trigger()
     print(out)
-
+    print('led board trigger')
+    time.sleep(1)
     out = led.illuminate()
     print(out)
-
+    print('led board 3led')
+    time.sleep(5)
     out = led.set_daleys()
     print(out)
+    print('led board delays set')
+    time.sleep(1)
     mylist = [None]*55
+    print('led board single illumination')
     for l in range(1,56):
         out = led.single_trigger(led_number=l)
         mylist[l-1]=out
     print(mylist)
+    time.sleep(1)
     
-
-
-
-
-
-
-
