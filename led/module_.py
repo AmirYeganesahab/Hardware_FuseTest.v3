@@ -2,15 +2,12 @@ from __future__ import print_function
 import sys
 from inspect import currentframe
 
-from ximea import xiapi
 import cython
 import logging
 import os
 from typing import *
 import serial
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
-import random
-import numpy as np
 import time
 import yaml
 
