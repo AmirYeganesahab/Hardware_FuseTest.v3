@@ -1,4 +1,4 @@
-from ..camera.camera import camera
+from module_ import camera
 import unittest
 
 cam = camera()
