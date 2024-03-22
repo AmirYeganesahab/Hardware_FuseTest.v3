@@ -25,5 +25,4 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run tests
-      working-directory: led
       run: python -m unittest led/ledunittest.py  # Replace with the command to run your tests
